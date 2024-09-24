@@ -8,7 +8,8 @@
 #include <execinfo.h>
 
 #define MAX_FRAMES 20
-#define MAX_STRING_LEN 1024
+#define CMD_STRING_LEN 1024
+#define NAME_STRING_LEN 256
 #define FRONT_COLOR_RED "\033[31m"
 #define FRONT_COLOR_NONE "\033[0m"
 #define DELIMITER "======================================="
@@ -29,7 +30,7 @@ int get_call_stack(char ***symbols) {
 
 void getBaseAddr(char *binaryName, char *baseAddr) {
     FILE *fp = fopen("/proc/self/maps", "r");
-    char buffer[MAX_STRING_LEN];
+    char buffer[NAME_STRING_LEN];
     const char *dash_pos;
 
     while (fgets(buffer, sizeof(buffer), fp) != NULL) {
@@ -110,14 +111,14 @@ void getBinaryPath(const char *input, char *binaryPath){
 void get_call_stack_with_line()
 {
     int i;
-    char realAddr[MAX_STRING_LEN];
-    char traceAddr[MAX_STRING_LEN];
-    char funcName[MAX_STRING_LEN];
-    char baseAddr[MAX_STRING_LEN];
-    char binaryPath[MAX_STRING_LEN];
-    char cmdStr[MAX_STRING_LEN];
-    char output[MAX_STRING_LEN];
-    char result[MAX_STRING_LEN];
+    char realAddr[NAME_STRING_LEN];
+    char traceAddr[NAME_STRING_LEN];
+    char funcName[NAME_STRING_LEN];
+    char baseAddr[NAME_STRING_LEN];
+    char binaryPath[NAME_STRING_LEN];
+    char cmdStr[CMD_STRING_LEN];
+    char output[NAME_STRING_LEN];
+    char result[NAME_STRING_LEN];
     char **messages;
     int msgLen;
 
@@ -133,14 +134,15 @@ void get_call_stack_with_line()
         if (strstr(binaryPath, ".so") != NULL) {
             hex_subtract(traceAddr, baseAddr, realAddr);
             hex_subtract(realAddr, "0x1", realAddr);
-            sprintf(cmdStr, "addr2line -e %s %s", binaryPath, realAddr);
+            snprintf(cmdStr, sizeof(cmdStr), "addr2line -e %s %s", binaryPath, realAddr);
+
         } else {
             hex_subtract(traceAddr, "0x1", realAddr);
-            sprintf(cmdStr, "addr2line -e  %s -i %s", binaryPath, realAddr);
+            snprintf(cmdStr, sizeof(cmdStr), "addr2line -e  %s -i %s", binaryPath, realAddr);
         }
         executeCommand(cmdStr, output, 1024);
-        sprintf(result + strlen(result), "#%d %s %s", i - 2, funcName, output);
+        snprintf(result + strlen(result), sizeof(cmdStr), "#%d %s %s", i - 2, funcName, output);
     }
-    sprintf(result + strlen(result), "" FRONT_COLOR_RED "Process %d quit" DELIMITER "" FRONT_COLOR_NONE "\n", getpid());
+    snprintf(result + strlen(result), sizeof(cmdStr), "" FRONT_COLOR_RED "Process %d quit" DELIMITER "" FRONT_COLOR_NONE "\n", getpid());
     printf("%s", result);
 }

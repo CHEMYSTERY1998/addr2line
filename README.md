@@ -8,4 +8,6 @@
 
 ## 使用
 
-在需要打印调用栈处调用get_call_stack_with_line()
+- 编译时候带上`-g -O0 -rdynamic`选项
+
+- 在需要打印调用栈处调用get_call_stack_with_line()
